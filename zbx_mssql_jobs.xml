@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-06T07:36:48Z</date>
+    <date>2020-02-06T08:20:06Z</date>
     <groups>
         <group>
             <name>Templates</name>
@@ -32,7 +32,7 @@ Functionality:&#13;
                         <item_prototype>
                             <name>SQL Agent, Instance {#INST}: Active jobs</name>
                             <key>perf_counter[&quot;\SQLAgent${#INST}:Jobs(_Total)\Active jobs&quot;]</key>
-                            <delay>{$MSSQL_INST_INT}</delay>
+                            <delay>{$MSSQL_INST_JOBS_INT}</delay>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>MSSQL JOBS</name>
@@ -42,7 +42,7 @@ Functionality:&#13;
                         <item_prototype>
                             <name>SQL Agent, Instance {#INST}: Failed jobs</name>
                             <key>perf_counter[&quot;\SQLAgent${#INST}:Jobs(_Total)\Failed jobs&quot;]</key>
-                            <delay>{$MSSQL_INST_INT}</delay>
+                            <delay>{$MSSQL_INST_JOBS_INT}</delay>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>MSSQL JOBS</name>
@@ -59,7 +59,7 @@ Functionality:&#13;
                         <item_prototype>
                             <name>SQL Agent, Instance {#INST}: Queued jobs</name>
                             <key>perf_counter[&quot;\SQLAgent${#INST}:Jobs(_Total)\Queued jobs&quot;]</key>
-                            <delay>{$MSSQL_INST_INT}</delay>
+                            <delay>{$MSSQL_INST_JOBS_INT}</delay>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>MSSQL JOBS</name>
@@ -69,7 +69,7 @@ Functionality:&#13;
                         <item_prototype>
                             <name>SQL Agent, Instance {#INST}: Successful jobs</name>
                             <key>perf_counter[&quot;\SQLAgent${#INST}:Jobs(_Total)\Successful jobs&quot;]</key>
-                            <delay>{$MSSQL_INST_INT}</delay>
+                            <delay>{$MSSQL_INST_JOBS_INT}</delay>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>MSSQL JOBS</name>
@@ -81,24 +81,8 @@ Functionality:&#13;
             </discovery_rules>
             <macros>
                 <macro>
-                    <macro>{$MSSQL_BUF_CACHE_HIT_LOW}</macro>
-                    <value>75</value>
-                </macro>
-                <macro>
-                    <macro>{$MSSQL_DB_INT}</macro>
-                    <value>5m</value>
-                </macro>
-                <macro>
                     <macro>{$MSSQL_INST_INT}</macro>
                     <value>5m</value>
-                </macro>
-                <macro>
-                    <macro>{$MSSQL_LOG_INT}</macro>
-                    <value>1m</value>
-                </macro>
-                <macro>
-                    <macro>{$MSSQL_LOG_USED}</macro>
-                    <value>80</value>
                 </macro>
             </macros>
         </template>
