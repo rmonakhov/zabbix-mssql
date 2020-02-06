@@ -1,0 +1,911 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>4.4</version>
+    <date>2020-02-06T07:36:31Z</date>
+    <groups>
+        <group>
+            <name>Templates</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Template DB MSSQL</template>
+            <name>Template DB MSSQL</name>
+            <description>Requirements:&#13;
+- Microsoft SQL Server 2008 to 2016&#13;
+- Zabbix 3.4+&#13;
+- PowerShell 3+&#13;
+- Zabbix global regular expression &quot;MSSQL Databases for discovery&quot;&#13;
+&#13;
+Functionality:&#13;
+- instances autodiscovery&#13;
+- databases autodiscovery&#13;
+- log monitoring</description>
+            <groups>
+                <group>
+                    <name>Templates</name>
+                </group>
+            </groups>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>Database Discovery</name>
+                    <key>mssql.db.discovery</key>
+                    <delay>1h</delay>
+                    <filter>
+                        <conditions>
+                            <condition>
+                                <macro>{#DBNAME}</macro>
+                                <value>@MSSQL Databases for discovery</value>
+                                <formulaid>A</formulaid>
+                            </condition>
+                        </conditions>
+                    </filter>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}, DB {#DBNAME}: Database Status</name>
+                            <key>mssql.db.status[&quot;{#INST}&quot;,&quot;{#DBNAME}&quot;]</key>
+                            <delay>{$MSSQL_DB_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL DATABASE</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last()}&lt;&gt;1</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{min(15m)}=1</recovery_expression>
+                                    <name>Database - {#DBNAME} on Instance {#INST} is not running</name>
+                                    <priority>AVERAGE</priority>
+                                    <description>EC tag is for Event Correlation.&#13;
+Setup a rule for &quot;event tag pair&quot;, use EC=EC, and set operation to close new event. This way only one event per database remains open.</description>
+                                    <tags>
+                                        <tag>
+                                            <tag>EC</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{nodata(30m)}=1</expression>
+                                    <name>Database - {#DBNAME} on Instance {#INST} no data for 30m</name>
+                                    <priority>AVERAGE</priority>
+                                    <description>EC tag is for Event Correlation.&#13;
+Setup a rule for &quot;event tag pair&quot;, use EC=EC, and set operation to close new event. This way only one event per database remains open.</description>
+                                    <tags>
+                                        <tag>
+                                            <tag>EC</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}, DB {#DBNAME}: Active Transactions</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Databases({#DBNAME})\Active Transactions&quot;]</key>
+                            <delay>{$MSSQL_DB_INT}</delay>
+                            <value_type>FLOAT</value_type>
+                            <description>Number of active transactions for the database.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL DATABASE</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}, DB {#DBNAME}: Data File Size</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Databases({#DBNAME})\Data File(s) Size (KB)&quot;]</key>
+                            <delay>{$MSSQL_DB_INT}</delay>
+                            <value_type>FLOAT</value_type>
+                            <units>B</units>
+                            <description>Cumulative size (in kilobytes) of all the data files in the database including any automatic growth. Monitoring this counter is useful, for example, for determining the correct size of tempdb.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL DATABASE</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>MULTIPLIER</type>
+                                    <params>1024</params>
+                                </step>
+                            </preprocessing>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}, DB {#DBNAME}: Log Bytes Flushed/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Databases({#DBNAME})\Log Bytes Flushed/sec&quot;]</key>
+                            <delay>{$MSSQL_DB_INT}</delay>
+                            <value_type>FLOAT</value_type>
+                            <units>B</units>
+                            <description>Total number of log bytes flushed per second. Useful for determining trends and utilization of the transaction log.</description>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}, DB {#DBNAME}: Log File Size</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Databases({#DBNAME})\Log File(s) Size (KB)&quot;]</key>
+                            <delay>{$MSSQL_DB_INT}</delay>
+                            <value_type>FLOAT</value_type>
+                            <units>B</units>
+                            <description>Cumulative size (in kilobytes) of all the transaction log files in the database.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL DATABASE</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>MULTIPLIER</type>
+                                    <params>1024</params>
+                                </step>
+                            </preprocessing>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}, DB {#DBNAME}: Log File Used Size</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Databases({#DBNAME})\Log File(s) Used Size (KB)&quot;]</key>
+                            <delay>{$MSSQL_DB_INT}</delay>
+                            <value_type>FLOAT</value_type>
+                            <units>B</units>
+                            <description>The cumulative used size of all the log files in the database.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL DATABASE</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>MULTIPLIER</type>
+                                    <params>1024</params>
+                                </step>
+                            </preprocessing>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}, DB {#DBNAME}: Log Flushes/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Databases({#DBNAME})\Log Flushes/sec&quot;]</key>
+                            <delay>{$MSSQL_DB_INT}</delay>
+                            <value_type>FLOAT</value_type>
+                            <description>Number of log flushes per second.</description>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}, DB {#DBNAME}: Log Flush Waits/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Databases({#DBNAME})\Log Flush Waits/sec&quot;]</key>
+                            <delay>{$MSSQL_DB_INT}</delay>
+                            <value_type>FLOAT</value_type>
+                            <description>Number of commits per second waiting for the log flush.</description>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}, DB {#DBNAME}: Log Flush Wait Time</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Databases({#DBNAME})\Log Flush Wait Time&quot;]</key>
+                            <delay>{$MSSQL_DB_INT}</delay>
+                            <value_type>FLOAT</value_type>
+                            <units>ms</units>
+                            <description>Total wait time (in milliseconds) to flush the log. On an AlwaysOn secondary database, this value indicates the wait time for log records to be hardened to disk.</description>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}, DB {#DBNAME}: Log Growths</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Databases({#DBNAME})\Log Growths&quot;]</key>
+                            <delay>{$MSSQL_DB_INT}</delay>
+                            <value_type>FLOAT</value_type>
+                            <description>Total number of times the transaction log for the database has been expanded.</description>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}, DB {#DBNAME}: Log Shrinks</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Databases({#DBNAME})\Log Shrinks&quot;]</key>
+                            <delay>{$MSSQL_DB_INT}</delay>
+                            <value_type>FLOAT</value_type>
+                            <description>Total number of times the transaction log for the database has been shrunk.</description>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}, DB {#DBNAME}: Log Truncations</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Databases({#DBNAME})\Log Truncations&quot;]</key>
+                            <delay>{$MSSQL_DB_INT}</delay>
+                            <value_type>FLOAT</value_type>
+                            <description>The number of times the transaction log has been shrunk.</description>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}, DB {#DBNAME}: Percent Log Used</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Databases({#DBNAME})\Percent Log Used&quot;]</key>
+                            <delay>{$MSSQL_DB_INT}</delay>
+                            <value_type>FLOAT</value_type>
+                            <units>%</units>
+                            <description>Percentage of space in the log that is in use.</description>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last()}&gt;{$MSSQL_LOG_USED}</expression>
+                                    <name>Database - {#DBNAME} on Instance {#INST} log using id too high</name>
+                                    <priority>WARNING</priority>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}, DB {#DBNAME}: Transactions per second</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Databases({#DBNAME})\Transactions/sec&quot;]</key>
+                            <delay>{$MSSQL_DB_INT}</delay>
+                            <value_type>FLOAT</value_type>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
+                <discovery_rule>
+                    <name>SQL Error Log</name>
+                    <key>mssql.errorlog</key>
+                    <delay>1h</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Error Log File (LOGCount)</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>log.count[{#ERRORLOG},Error|Failed,&quot;UTF-16&quot;]</key>
+                            <delay>{$MSSQL_LOG_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL Error Log</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{sum(5m)}&gt;0</expression>
+                                    <name>Errors in SQL instance {#INST} ERRORLOG</name>
+                                    <priority>WARNING</priority>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Error Log File (LOG)</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>log[{#ERRORLOG},Error|Failed,&quot;UTF-16&quot;]</key>
+                            <delay>{$MSSQL_LOG_INT}</delay>
+                            <trends>0</trends>
+                            <value_type>LOG</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL Error Log</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
+                <discovery_rule>
+                    <name>Instance Discovery</name>
+                    <key>mssql.instance.discovery</key>
+                    <delay>1h</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Access Methods\Page Splits/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Access Methods\Page Splits/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <value_type>FLOAT</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL ACCESS METHODS</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Bytes Received from Replica/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Availability Replica(_Total)\Bytes Received from Replica/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Bytes Sent to Replica/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Availability Replica(_Total)\Bytes Sent to Replica/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Bytes Sent to Transport/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Availability Replica(_Total)\Bytes Sent to Transport/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Flow Control/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Availability Replica(_Total)\Flow Control/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Flow Control Time (ms/sec)</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Availability Replica(_Total)\Flow Control Time (ms/sec)&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Receives from Replica/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Availability Replica(_Total)\Receives from Replica/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Resent Messages/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Availability Replica(_Total)\Resent Messages/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Sends to Replica/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Availability Replica(_Total)\Sends to Replica/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Sends to Transport/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Availability Replica(_Total)\Sends to Transport/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Buffer cache hit ratio</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Buffer Manager\Buffer cache hit ratio&quot;,30]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL MEMORY</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last()}&lt;{$MSSQL_BUF_CACHE_HIT_LOW}</expression>
+                                    <name>SQLServer, instance {#INST}: Buffer manager: Cache hit ratio is too low</name>
+                                    <priority>AVERAGE</priority>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Buffer Manager\Page life expectancy</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Buffer Manager\Page life expectancy&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL MEMORY</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Buffer Manager\Page reads/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Buffer Manager\Page reads/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <value_type>FLOAT</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL MEMORY</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Buffer Manager\Page writes/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Buffer Manager\Page writes/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <value_type>FLOAT</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL MEMORY</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Database Flow Control Delay</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\Database Flow Control Delay&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Database Flow Controls/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\Database Flow Controls/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: File Bytes Received/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\File Bytes Received/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Group Commits/Sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\Group Commits/Sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Group Commit Time</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\Group Commit Time&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Log Bytes Compressed/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\Log Bytes Compressed/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Log Bytes Decompressed/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\Log Bytes Decompressed/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Log Bytes Received/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\Log Bytes Received/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Log Compression Cache hits/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\Log Compression Cache hits/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Log Compression Cache misses/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\Log Compression Cache misses/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Log Compressions/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\Log Compressions/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Log Decompressions/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\Log Decompressions/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Log remaining for undo</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\Log remaining for undo&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Log Send Queue</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\Log Send Queue&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Mirrored Write Transactions/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\Mirrored Write Transactions/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Recovery Queue</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\Recovery Queue&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Redo blocked/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\Redo blocked/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Redo Bytes Remaining</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\Redo Bytes Remaining&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Redone Bytes/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\Redone Bytes/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Redones/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\Redones/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Total Log requiring undo</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\Total Log requiring undo&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Transaction Delay</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Database Replica(_Total)\Transaction Delay&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL REPLICA</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}: Databases(_Total)\Percent Log Used</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Databases(_Total)\Percent Log Used&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL DATABASE</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}:General Statistics\User Connections</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:General Statistics\User Connections&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL STATS</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}:Locks(_Total)\Lock Timeouts/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Locks(_Total)\Lock Timeouts/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <value_type>FLOAT</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL LOCKS</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}:Locks(_Total)\Number of Deadlocks/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Locks(_Total)\Number of Deadlocks/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL LOCKS</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}:Memory Manager\Memory Grants Pending</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Memory Manager\Memory Grants Pending&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL MEMORY</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}:Memory Manager\Target Server Memory (KB)</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Memory Manager\Target Server Memory (KB)&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <units>KB</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL MEMORY</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}:Memory Manager\Total Server Memory (KB)</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Memory Manager\Total Server Memory (KB)&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <units>KB</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL MEMORY</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}:SQL Statistics\Batch Requests/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:SQL Statistics\Batch Requests/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <value_type>FLOAT</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL STATS</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}:SQL Statistics\SQL Compilations/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:SQL Statistics\SQL Compilations/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <value_type>FLOAT</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL STATS</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}:SQL Statistics\SQL Re-Compilations/sec</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:SQL Statistics\SQL Re-Compilations/sec&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <value_type>FLOAT</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL STATS</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}:Memory grant queue waits/Average wait time (ms)</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Wait Statistics(Average wait time (ms))\Memory grant queue waits&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <units>ms</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL WAITS</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}:Network IO waits/Average wait time (ms)</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Wait Statistics(Average wait time (ms))\Network IO waits&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <units>ms</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL WAITS</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}:Page IO latch waits/Average wait time (ms)</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Wait Statistics(Average wait time (ms))\Page IO latch waits&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <units>ms</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL WAITS</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}:Memory grant queue waits/Cumulative wait time (ms) per second</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Wait Statistics(Cumulative wait time (ms) per second)\Memory grant queue waits&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <units>ms</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL WAITS</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}:Network IO waits/Cumulative wait time (ms) per second</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Wait Statistics(Cumulative wait time (ms) per second)\Network IO waits&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <units>ms</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL WAITS</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}:Page IO latch waits/Cumulative wait time (ms) per second</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Wait Statistics(Cumulative wait time (ms) per second)\Page IO latch waits&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <units>ms</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL WAITS</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}:Memory grant queue waits/Waits in progress</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Wait Statistics(Waits in progress)\Memory grant queue waits&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <units>ms</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL WAITS</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}:Network IO waits/Waits in progress</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Wait Statistics(Waits in progress)\Network IO waits&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <units>ms</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL WAITS</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}:Page IO latch waits/Waits in progress</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Wait Statistics(Waits in progress)\Page IO latch waits&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL WAITS</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}:Memory grant queue waits/Waits started per second</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Wait Statistics(Waits started per second)\Memory grant queue waits&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <units>ms</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL WAITS</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}:Network IO waits/Waits started per second</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Wait Statistics(Waits started per second)\Network IO waits&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <units>ms</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL WAITS</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>SQL Server, Instance {#INST}:Page IO latch waits/Waits started per second</name>
+                            <key>perf_counter[&quot;\{#PERFCOUNTERNAME}:Wait Statistics(Waits started per second)\Page IO latch waits&quot;]</key>
+                            <delay>{$MSSQL_INST_INT}</delay>
+                            <units>ms</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MSSQL WAITS</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                    </item_prototypes>
+                    <trigger_prototypes>
+                        <trigger_prototype>
+                            <expression>{Template DB MSSQL:perf_counter[&quot;\{#PERFCOUNTERNAME}:Access Methods\Page Splits/sec&quot;].last()}&gt;{Template DB MSSQL:perf_counter[&quot;\{#PERFCOUNTERNAME}:SQL Statistics\Batch Requests/sec&quot;].last()}/10</expression>
+                            <name>SQLServer, instance {#INST}: Access Methods: Page splits is too high</name>
+                            <priority>AVERAGE</priority>
+                        </trigger_prototype>
+                    </trigger_prototypes>
+                </discovery_rule>
+            </discovery_rules>
+            <macros>
+                <macro>
+                    <macro>{$MSSQL_BUF_CACHE_HIT_LOW}</macro>
+                    <value>75</value>
+                </macro>
+                <macro>
+                    <macro>{$MSSQL_DB_INT}</macro>
+                    <value>5m</value>
+                </macro>
+                <macro>
+                    <macro>{$MSSQL_INST_INT}</macro>
+                    <value>5m</value>
+                </macro>
+                <macro>
+                    <macro>{$MSSQL_LOG_INT}</macro>
+                    <value>1m</value>
+                </macro>
+                <macro>
+                    <macro>{$MSSQL_LOG_USED}</macro>
+                    <value>80</value>
+                </macro>
+            </macros>
+        </template>
+    </templates>
+</zabbix_export>
