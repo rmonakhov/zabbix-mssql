@@ -36,9 +36,11 @@ Functionality:
 Add job discovery with following output:
 ```
 [{
-    "{#ENABLED}":"Int",
-	"{#STATUS}":"Int",
-	"{#DURATION}":"Int",
-	"{#LASTRUN}":"UnixTime"
+"{#JOBNAME}":"Text",
+"{#JOBID}":"Text",
+"{#ENABLED}":"Int",
+"{#STATUS}":"Int",
+"{#DURATION}":"Int",
+"{#LASTRUN}":"UnixTime"
 }]
 ```
